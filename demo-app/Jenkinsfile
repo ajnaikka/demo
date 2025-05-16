@@ -4,6 +4,10 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'demo-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        WORKSPACE_DIR = "${WORKSPACE}"
+        REMOTE_HOST = 'ubuntu@50.17.68.108'
+        REMOTE_DIR = '/home/ubuntu/demo-app'
+        CREDENTIALS_ID = 'demo'
     }
     
     stages {
@@ -11,56 +15,74 @@ pipeline {
             steps {
                 echo 'Checking out code...'
                 checkout scm
+                dir('demo-app') {
+                    echo "Current directory: ${pwd()}"
+                }
             }
         }
-         
-        // stage('Test') {
-        //     steps {
-        //         echo 'Running tests...'
-        //         // Simple HTML validation
-        //         sh '''
-        //             if grep -q "<!DOCTYPE html>" index.html; then
-        //                 echo "HTML structure is valid"
-        //             else
-        //                 echo "HTML structure is invalid"
-        //                 exit 1
-        //             fi
-        //         '''
-        //     }
-        // }
+        
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                dir('demo-app') {
+                    sh '''
+                        if grep -q "<!DOCTYPE html>" index.html; then
+                            echo "HTML structure is valid"
+                        else
+                            echo "HTML structure is invalid"
+                            exit 1
+                        fi
+                    '''
+                }
+            }
+        }
         
         stage('Build') {
             steps {
                 echo 'Building application...'
-                // Create build info file
-                // sh '''
-                //     echo "Build: ${BUILD_NUMBER}" > build-info.txt
-                //     echo "Built on: ${new Date().format("yyyy-MM-dd HH:mm:ss")}" >> build-info.txt
-                // '''
-                
-                // Build Docker image
-                sh '''
-                    cd ~/demo/
-                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                    docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                '''
+                dir('demo-app') {
+                    // Create build info file
+                    sh '''
+                        echo "Build: ${BUILD_NUMBER}" > build-info.txt
+                        echo "Built on: ${new Date().format("yyyy-MM-dd HH:mm:ss")}" >> build-info.txt
+                        echo "Deployed to: ${REMOTE_HOST}" >> build-info.txt
+                    '''
+                    
+                    // Build Docker image
+                    sh '''
+                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                    '''
+                    
+                    // Save Docker image to tar file
+                    sh 'docker save ${DOCKER_IMAGE}:${DOCKER_TAG} | gzip > ${DOCKER_IMAGE}.tar.gz'
+                }
             }
         }
         
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
-                // Stop and remove existing containers
-                sh 'docker-compose down || true'
-                
-                // Start the new version
-                sh 'docker-compose up -d'
-                
-                // Clean up old images
-                // sh '''
-                //     docker image prune -f
-                //     docker system prune -f
-                // ''' 
+                echo 'Deploying to remote server...'
+                dir('demo-app') {
+                    // Create remote directory if it doesn't exist
+                    sshagent(['demo']) {
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_HOST} "mkdir -p ${REMOTE_DIR}"
+                            
+                            # Copy files to remote server
+                            scp -o StrictHostKeyChecking=no docker-compose.yml ${REMOTE_HOST}:${REMOTE_DIR}/
+                            scp -o StrictHostKeyChecking=no ${DOCKER_IMAGE}.tar.gz ${REMOTE_HOST}:${REMOTE_DIR}/
+                            
+                            # Deploy on remote server
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_HOST} "cd ${REMOTE_DIR} && \
+                                docker load < ${DOCKER_IMAGE}.tar.gz && \
+                                docker-compose down || true && \
+                                docker-compose up -d && \
+                                // docker image prune -f && \
+                                // docker system prune -f"
+                        '''
+                    }
+                }
             }
         }
     }
@@ -68,14 +90,18 @@ pipeline {
     post {
         success {
             echo 'Pipeline completed successfully!'
-            // Archive the build artifacts
-            archiveArtifacts artifacts: 'build-info.txt'
+            dir('demo-app') {
+                archiveArtifacts artifacts: 'build-info.txt'
+            }
         }
         failure {
             echo 'Pipeline failed!'
         }
         always {
-            // Clean up workspace
+            // Clean up local files
+            dir('demo-app') {
+                sh 'rm -f ${DOCKER_IMAGE}.tar.gz || true'
+            }
             cleanWs()
         }
     }
