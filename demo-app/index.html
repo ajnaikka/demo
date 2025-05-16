@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jenkins Demo App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .counter-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        #counter {
+            font-size: 48px;
+            color: #3498db;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jenkins Demo Application</h1>
+        
+        <div class="counter-container">
+            <h2>Simple Counter Demo</h2>
+            <div id="counter">0</div>
+            <button onclick="decrement()">-</button>
+            <button onclick="increment()">+</button>
+            <button onclick="reset()">Reset</button>
+        </div>
+
+        <div class="info-box">
+            <h3>About This Demo</h3>
+            <p>This is a simple demo application to showcase Jenkins CI/CD capabilities:</p>
+            <ul>
+                <li>HTML/CSS/JavaScript for frontend</li>
+                <li>Simple counter functionality</li>
+                <li>Perfect for demonstrating Jenkins pipelines</li>
+                <li>Easy to test and deploy</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let count = 0;
+        const counterDisplay = document.getElementById('counter');
+
+        function updateDisplay() {
+            counterDisplay.textContent = count;
+            // Add a simple animation
+            counterDisplay.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                counterDisplay.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        function increment() {
+            count++;
+            updateDisplay();
+        }
+
+        function decrement() {
+            count--;
+            updateDisplay();
+        }
+
+        function reset() {
+            count = 0;
+            updateDisplay();
+        }
+    </script>
+</body>
+</html> 

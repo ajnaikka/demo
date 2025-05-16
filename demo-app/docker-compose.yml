@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  demo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demo-app
+    restart: unless-stopped
+    ports:
+      - "8081:80"  # Using 8081 to avoid conflict with Jenkins
+    volumes:
+      - ./logs/nginx:/var/log/nginx  # For persistent logs
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    networks:
+      - demo-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  demo-network:
+    name: demo-network
+    driver: bridge 
