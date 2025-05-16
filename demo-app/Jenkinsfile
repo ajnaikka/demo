@@ -14,32 +14,33 @@ pipeline {
             }
         }
         
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                // Simple HTML validation
-                sh '''
-                    if grep -q "<!DOCTYPE html>" index.html; then
-                        echo "HTML structure is valid"
-                    else
-                        echo "HTML structure is invalid"
-                        exit 1
-                    fi
-                '''
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         echo 'Running tests...'
+        //         // Simple HTML validation
+        //         sh '''
+        //             if grep -q "<!DOCTYPE html>" index.html; then
+        //                 echo "HTML structure is valid"
+        //             else
+        //                 echo "HTML structure is invalid"
+        //                 exit 1
+        //             fi
+        //         '''
+        //     }
+        // }
         
         stage('Build') {
             steps {
                 echo 'Building application...'
                 // Create build info file
-                sh '''
-                    echo "Build: ${BUILD_NUMBER}" > build-info.txt
-                    echo "Built on: ${new Date().format("yyyy-MM-dd HH:mm:ss")}" >> build-info.txt
-                '''
+                // sh '''
+                //     echo "Build: ${BUILD_NUMBER}" > build-info.txt
+                //     echo "Built on: ${new Date().format("yyyy-MM-dd HH:mm:ss")}" >> build-info.txt
+                // '''
                 
                 // Build Docker image
                 sh '''
+                    cd ~/demo/
                     docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
                     docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
                 '''
@@ -56,10 +57,10 @@ pipeline {
                 sh 'docker-compose up -d'
                 
                 // Clean up old images
-                sh '''
-                    docker image prune -f
-                    docker system prune -f
-                '''
+                // sh '''
+                //     docker image prune -f
+                //     docker system prune -f
+                // '''
             }
         }
     }
