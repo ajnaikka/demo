@@ -41,12 +41,12 @@ pipeline {
             steps {
                 echo 'Building application...'
                 dir('demo-app') {
-                    // Create build info file
-                    sh '''
-                        echo "Build: ${BUILD_NUMBER}" > build-info.txt
-                        echo "Built on: ${new Date().format("yyyy-MM-dd HH:mm:ss")}" >> build-info.txt
-                        echo "Deployed to: ${REMOTE_HOST}" >> build-info.txt
-                    '''
+                    // // Create build info file
+                    // sh '''
+                    //     echo "Build: ${BUILD_NUMBER}" > build-info.txt
+                    //     echo "Built on: ${new Date().format("yyyy-MM-dd HH:mm:ss")}" >> build-info.txt
+                    //     echo "Deployed to: ${REMOTE_HOST}" >> build-info.txt
+                    // '''
                     
                     // Build Docker image
                     sh '''
